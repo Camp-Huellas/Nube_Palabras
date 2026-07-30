@@ -2,8 +2,14 @@ import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase
 import { db } from "./firebase-config.js";
 
 // 1. Generar Código QR Dinámico
-// Usamos new URL() para que respete el nombre del repositorio en GitHub Pages
-const formUrl = new URL("form.html", window.location.href).href;
+let currentUrl = window.location.href.split('?')[0].split('#')[0]; // Limpiar la URL
+if (currentUrl.endsWith(".html")) {
+  currentUrl = currentUrl.substring(0, currentUrl.lastIndexOf("/"));
+}
+if (!currentUrl.endsWith("/")) {
+  currentUrl += "/";
+}
+const formUrl = currentUrl + "form.html";
 const qrImg = document.getElementById("qr-image");
 
 if (qrImg) {
@@ -55,10 +61,10 @@ maskImg.onload = () => {
         drawWordCloud();
       }
     } else {
-        console.log("No hay datos en Firebase aún.");
-        // Dibujar solo la máscara vacía si no hay palabras
-        currentWords = [];
-        drawWordCloud();
+      console.log("No hay datos en Firebase aún.");
+      // Dibujar solo la máscara vacía si no hay palabras
+      currentWords = [];
+      drawWordCloud();
     }
   }, (error) => {
     console.error("Error escuchando Firebase:", error);
@@ -66,7 +72,7 @@ maskImg.onload = () => {
 };
 
 maskImg.onerror = () => {
-    console.error("No se pudo cargar la imagen de la máscara (mask.png).");
+  console.error("No se pudo cargar la imagen de la máscara (mask.png).");
 }
 
 function drawWordCloud() {
@@ -74,11 +80,11 @@ function drawWordCloud() {
   isCloudRendering = true;
 
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  
+
   // a. Dibujar la imagen de la máscara en el centro del canvas
   const imgRatio = maskImg.width / maskImg.height;
   const canvasRatio = canvas.width / canvas.height;
-  
+
   let drawWidth, drawHeight;
   if (canvasRatio > imgRatio) {
     drawHeight = canvas.height * 0.9;
@@ -87,40 +93,40 @@ function drawWordCloud() {
     drawWidth = canvas.width * 0.9;
     drawHeight = drawWidth / imgRatio;
   }
-  
+
   const startX = (canvas.width - drawWidth) / 2;
   const startY = (canvas.height - drawHeight) / 2;
 
   // Llenar el fondo temporalmente de blanco para los bordes
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  
+
   ctx.drawImage(maskImg, startX, startY, drawWidth, drawHeight);
 
   // b. Modificar los píxeles
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = imageData.data;
-  
+
   for (let i = 0; i < data.length; i += 4) {
     const r = data[i];
-    const g = data[i+1];
-    const b = data[i+2];
-    
+    const g = data[i + 1];
+    const b = data[i + 2];
+
     // Si el píxel es oscuro (parte de la huella)
     if (r < 100 && g < 100 && b < 100) {
-      data[i+3] = 0; // Transparente
+      data[i + 3] = 0; // Transparente
     } else {
-      data[i] = 15;   
-      data[i+1] = 23; 
-      data[i+2] = 42; 
-      data[i+3] = 255;
+      data[i] = 15;
+      data[i + 1] = 23;
+      data[i + 2] = 42;
+      data[i + 3] = 255;
     }
   }
   ctx.putImageData(imageData, 0, 0);
 
   if (currentWords.length === 0) {
-      isCloudRendering = false;
-      return;
+    isCloudRendering = false;
+    return;
   }
 
   // c. Dibujar la Nube de Palabras
@@ -129,7 +135,7 @@ function drawWordCloud() {
     clearCanvas: false,
     backgroundColor: "transparent",
     fontFamily: "'Outfit', sans-serif",
-    color: function() {
+    color: function () {
       const colors = ['#38bdf8', '#818cf8', '#34d399', '#f472b6', '#fbbf24', '#f8fafc'];
       return colors[Math.floor(Math.random() * colors.length)];
     },

@@ -1,34 +1,31 @@
 <!doctype html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Enviar Palabra</title>
-    <link rel="stylesheet" href="./src/form.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
-  </head>
-  <body>
-    <div class="form-container">
-      <h1>¡Añade tu palabra!</h1>
-      <p>Escribe 1 a 3 palabras para que aparezcan en la nube.</p>
-      
-      <form id="word-form">
-        <input 
-          type="text" 
-          id="word-input" 
-          placeholder="Ej: Felicidad total" 
-          maxlength="30" 
-          autocomplete="off" 
-          required 
-        />
-        <button type="submit" id="submit-btn">Enviar</button>
-      </form>
 
-      <div id="success-msg" class="hidden">
-        ¡Palabra enviada con éxito! 🎉
-      </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enviar Palabra</title>
+  <link rel="stylesheet" href="./src/form.css">
+  <link rel="icon" href="Imagen/icon.png?v=2" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div class="form-container">
+    <h1>¡Añade tu palabra!</h1>
+    <p>Escribe 1 a 3 palabras para que aparezcan en la nube.</p>
+
+    <form id="word-form">
+      <input type="text" id="word-input" placeholder="Ej: Felicidad total" maxlength="30" autocomplete="off" required />
+      <button type="submit" id="submit-btn">Enviar</button>
+    </form>
+
+    <div id="success-msg" class="hidden">
+      ¡Palabra enviada con éxito! 🎉
     </div>
-    
-    <script type="module" src="./src/form.js"></script>
-  </body>
+  </div>
+
+  <script type="module" src="./src/form.js"></script>
+</body>
+
 </html>
