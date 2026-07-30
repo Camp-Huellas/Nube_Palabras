@@ -1,12 +1,12 @@
 import { ref, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import { db } from "./firebase-config.js";
 
-document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('word-form');
-  const input = document.getElementById('word-input');
-  const submitBtn = document.getElementById('submit-btn');
-  const successMsg = document.getElementById('success-msg');
+const form = document.getElementById('word-form');
+const input = document.getElementById('word-input');
+const submitBtn = document.getElementById('submit-btn');
+const successMsg = document.getElementById('success-msg');
 
+if (form) {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -40,10 +40,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (error) {
       console.error("Error al guardar la palabra:", error);
-      alert('Hubo un error al enviar la palabra. Inténtalo de nuevo.');
+      alert('Hubo un error al enviar la palabra. Inténtalo de nuevo. Asegúrate de que las reglas de Firebase estén en true.');
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Enviar';
     }
   });
-});
+}
