@@ -13,7 +13,7 @@ const formUrl = currentUrl + "form.html";
 const qrImg = document.getElementById("qr-image");
 
 if (qrImg) {
-  qrImg.src = `https://quickchart.io/qr?text=${encodeURIComponent(formUrl)}&size=250&margin=1`;
+  qrImg.src = `https://quickchart.io/qr?text=${encodeURIComponent(formUrl)}&size=320&margin=1`;
 }
 
 // 2. Elementos de la interfaz extra
@@ -84,32 +84,48 @@ maskImg.onload = () => {
       }
 
       const uniqueWords = Object.keys(wordCounts).length;
-      
-      // Para que se llenen los dedos y todos los rincones, necesitamos MUCHO "texto".
-      // Si solo hay 80 palabras, el espiral puede quedarse sin palabras antes de 
-      // llegar a los dedos más lejanos. Por lo tanto, repetiremos las palabras 
-      // con tamaños cada vez más pequeños para usarlas como "pintura" y rellenar todo.
-      const TARGET_DRAW_WORDS = 400; 
-      let iterations = Math.ceil(TARGET_DRAW_WORDS / Math.max(uniqueWords, 1));
-      
-      let baseMultiplier = uniqueWords > 80 ? 15 : 60;
-
       const entries = Object.entries(wordCounts).sort((a, b) => b[1] - a[1]);
+      
       let newList = [];
 
-      for (let i = 0; i < iterations; i++) {
-        entries.forEach(([word, count], index) => {
-          // La primera iteración (i=0) tiene el tamaño normal/grande.
-          // Las siguientes copias (i>0) son un 50% más pequeñas en cada pasada.
-          const variance = 1.2 - (index / Math.max(entries.length - 1, 1)); 
-          const repetitionShrink = Math.pow(0.5, i); 
-          
-          newList.push([word, count * baseMultiplier * variance * repetitionShrink]);
-        });
+      // 1. Palabras principales (las reales)
+      // Ajustamos el tamaño para que sean legibles y grandes
+      let mainMultiplier = 60;
+      if (uniqueWords > 50) {
+        mainMultiplier = Math.max(15, 60 * (50 / uniqueWords));
       }
 
-      // IMPORTANTE: Ordenar toda la lista de mayor a menor para que las palabras
-      // grandes llenen el centro primero, y las copias pequeñas llenen los dedos al final.
+      entries.forEach(([word, count], index) => {
+        // Variación para que no se vean todas iguales si tienen el mismo count
+        const variance = 1.2 - (index / Math.max(entries.length - 1, 1)); 
+        newList.push([word, count * mainMultiplier * variance]);
+      });
+
+      // 2. Palabras "Arena" (Relleno)
+      // Para que se llenen los dedos de los pies y los bordes sin congelar el navegador,
+      // usaremos el concepto de "arena": agregamos muchísimas copias pequeñas de las palabras.
+      // Al ser pequeñas (tamaño 8 a 12), el algoritmo las coloca casi instantáneamente
+      // en los huecos sobrantes (como los dedos) sin requerir cálculos pesados.
+      
+      const TARGET_TOTAL_WORDS = 350; 
+      let fillerNeeded = TARGET_TOTAL_WORDS - uniqueWords;
+      
+      if (fillerNeeded > 0) {
+        let i = 0;
+        while (fillerNeeded > 0) {
+          const [word] = entries[i % entries.length];
+          // Asignar un tamaño muy pequeño (ej: 8 a 14) para que actúen como relleno
+          const tinySize = 8 + (Math.random() * 6);
+          newList.push([word, tinySize]);
+          
+          i++;
+          fillerNeeded--;
+        }
+      }
+
+      // IMPORTANTE: Ordenar de mayor a menor. 
+      // Las grandes formarán el centro del pie.
+      // La "arena" (las pequeñas de tamaño 8-14) se escurrirán hacia los dedos.
       newList.sort((a, b) => b[1] - a[1]);
 
       // Solo re-dibujar si hay cambios
@@ -210,16 +226,12 @@ function drawWordCloud() {
     },
     rotateRatio: 0.35,
     rotationSteps: 2,
-    gridSize: 4, // Grid más pequeño para encontrar los huecos diminutos en los dedos
-    shrinkToFit: true, 
+    gridSize: 8, 
+    shrinkToFit: false, // ¡DESACTIVADO! Esto era lo que congelaba el navegador.
     weightFactor: function (size) {
-      // Dejamos que el tamaño máximo sea enorme (300) para que intente llenar.
-      // shrinkToFit se encargará de achicarlo si choca.
-      // El minSize es muy pequeño (8) para que las palabras puedan entrar en los dedos.
-      const minSize = 8; 
-      const maxSize = 300;
-      
-      return Math.max(minSize, Math.min(size, maxSize));
+      // Como ya calculamos los tamaños exactos en la lista (reales vs arena),
+      // simplemente devolvemos el tamaño directamente.
+      return size;
     }
   });
 

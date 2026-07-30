@@ -33,8 +33,8 @@ body {
 #editable-title {
   position: absolute;
   top: 30px;
-  left: 320px;
-  width: calc(100% - 360px);
+  left: 420px;
+  width: calc(100% - 460px);
   text-align: center;
   z-index: 20;
   font-size: 2.5rem;
@@ -117,8 +117,8 @@ body {
   border-radius: 8px;
   background-color: #fff;
   padding: 10px;
-  width: 250px;
-  height: 250px;
+  width: 320px;
+  height: 320px;
 }
 
 /* Contenedor de la nube de palabras */
@@ -128,8 +128,8 @@ body {
   justify-content: center;
   align-items: center;
   height: 100%;
-  width: calc(100% - 320px);
-  margin-left: 320px;
+  width: calc(100% - 420px);
+  margin-left: 420px;
   position: relative;
 }
 
