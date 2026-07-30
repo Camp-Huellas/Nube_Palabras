@@ -2,7 +2,8 @@ import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase
 import { db } from "./firebase-config.js";
 
 // 1. Generar Código QR Dinámico
-const formUrl = window.location.origin + "/form.html";
+// Usamos new URL() para que respete el nombre del repositorio en GitHub Pages
+const formUrl = new URL("form.html", window.location.href).href;
 const qrImg = document.getElementById("qr-image");
 
 if (qrImg) {
