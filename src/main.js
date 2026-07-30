@@ -85,23 +85,32 @@ maskImg.onload = () => {
 
       const uniqueWords = Object.keys(wordCounts).length;
       
-      // Objetivo: 80 respuestas para completar las huellas de forma ideal.
-      const targetWords = 80;
-      const baseMultiplier = 12; // Multiplicador ideal cuando hay 80 palabras
+      // Para que se llenen los dedos y todos los rincones, necesitamos MUCHO "texto".
+      // Si solo hay 80 palabras, el espiral puede quedarse sin palabras antes de 
+      // llegar a los dedos más lejanos. Por lo tanto, repetiremos las palabras 
+      // con tamaños cada vez más pequeños para usarlas como "pintura" y rellenar todo.
+      const TARGET_DRAW_WORDS = 400; 
+      let iterations = Math.ceil(TARGET_DRAW_WORDS / Math.max(uniqueWords, 1));
       
-      // Escalado dinámico:
-      // Si hay 1 palabra -> (80 * 12) / 1 = 960 (Se limitará al máximo)
-      // Si hay 80 palabras -> (80 * 12) / 80 = 12
-      // Si hay 160 palabras -> (80 * 12) / 160 = 6 (Se achican)
-      let multiplier = (targetWords * baseMultiplier) / Math.max(uniqueWords, 1);
-      
-      // Limitamos el multiplicador para evitar palabras gigantes o microscópicas
-      multiplier = Math.max(3, Math.min(multiplier, 90));
+      let baseMultiplier = uniqueWords > 80 ? 15 : 60;
 
-      // Convertir a formato que requiere wordcloud2.js: [[palabra, peso], ...]
-      const newList = Object.entries(wordCounts).map(([word, count]) => {
-        return [word, count * multiplier]; 
-      });
+      const entries = Object.entries(wordCounts).sort((a, b) => b[1] - a[1]);
+      let newList = [];
+
+      for (let i = 0; i < iterations; i++) {
+        entries.forEach(([word, count], index) => {
+          // La primera iteración (i=0) tiene el tamaño normal/grande.
+          // Las siguientes copias (i>0) son un 50% más pequeñas en cada pasada.
+          const variance = 1.2 - (index / Math.max(entries.length - 1, 1)); 
+          const repetitionShrink = Math.pow(0.5, i); 
+          
+          newList.push([word, count * baseMultiplier * variance * repetitionShrink]);
+        });
+      }
+
+      // IMPORTANTE: Ordenar toda la lista de mayor a menor para que las palabras
+      // grandes llenen el centro primero, y las copias pequeñas llenen los dedos al final.
+      newList.sort((a, b) => b[1] - a[1]);
 
       // Solo re-dibujar si hay cambios
       if (JSON.stringify(newList) !== JSON.stringify(currentWords)) {
@@ -199,14 +208,16 @@ function drawWordCloud() {
       const colors = ['#38bdf8', '#818cf8', '#34d399', '#f472b6', '#fbbf24', '#f8fafc'];
       return colors[Math.floor(Math.random() * colors.length)];
     },
-    rotateRatio: 0.3,
+    rotateRatio: 0.35,
     rotationSteps: 2,
-    gridSize: 8,
-    shrinkToFit: true, // Si una palabra no cabe, la reduce automáticamente
+    gridSize: 4, // Grid más pequeño para encontrar los huecos diminutos en los dedos
+    shrinkToFit: true, 
     weightFactor: function (size) {
-      // Definimos límites para evitar palabras ilegibles o que se desborden masivamente
-      const minSize = 14; 
-      const maxSize = totalParticipants > targetWords ? 60 : 120;
+      // Dejamos que el tamaño máximo sea enorme (300) para que intente llenar.
+      // shrinkToFit se encargará de achicarlo si choca.
+      // El minSize es muy pequeño (8) para que las palabras puedan entrar en los dedos.
+      const minSize = 8; 
+      const maxSize = 300;
       
       return Math.max(minSize, Math.min(size, maxSize));
     }
