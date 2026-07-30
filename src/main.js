@@ -39,6 +39,10 @@ if (clearBtn) {
 const canvas = document.getElementById("wordcloud-canvas");
 const wrapper = document.querySelector(".wordcloud-wrapper");
 
+let currentWords = [];
+let isCloudRendering = false;
+let totalParticipants = 0;
+
 // Ajustar tamaño del canvas
 const updateCanvasSize = () => {
   canvas.width = wrapper.clientWidth;
@@ -51,10 +55,6 @@ const updateCanvasSize = () => {
 };
 updateCanvasSize();
 window.addEventListener('resize', updateCanvasSize);
-
-let currentWords = [];
-let isCloudRendering = false;
-let totalParticipants = 0;
 
 // 4. Cargar la imagen de la máscara (huellas)
 const maskImg = new Image();
