@@ -1,4 +1,4 @@
-import { ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { ref, onValue, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import { db } from "./firebase-config.js";
 
 // 1. Generar Código QR Dinámico
@@ -16,7 +16,26 @@ if (qrImg) {
   qrImg.src = `https://quickchart.io/qr?text=${encodeURIComponent(formUrl)}&size=150&margin=1`;
 }
 
-// 2. Preparar el Canvas para la Nube de Palabras
+// 2. Elementos de la interfaz extra
+const participantCountEl = document.getElementById('participant-count');
+const clearBtn = document.getElementById('clear-btn');
+const faintBg = document.getElementById('faint-bg');
+
+// Lógica del botón limpiar
+if (clearBtn) {
+  clearBtn.addEventListener('click', () => {
+    if (confirm("¿Estás seguro de que deseas eliminar todas las palabras y empezar de cero?")) {
+      remove(ref(db, "words")).then(() => {
+        currentWords = [];
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        console.log("Base de datos limpia.");
+      });
+    }
+  });
+}
+
+// 3. Preparar el Canvas para la Nube de Palabras
 const canvas = document.getElementById("wordcloud-canvas");
 const wrapper = document.querySelector(".wordcloud-wrapper");
 
@@ -24,35 +43,54 @@ const wrapper = document.querySelector(".wordcloud-wrapper");
 const updateCanvasSize = () => {
   canvas.width = wrapper.clientWidth;
   canvas.height = wrapper.clientHeight;
+  if (currentWords.length > 0) {
+      // Forzar redraw si se redimensiona (opcional, para mantener responsive)
+      isCloudRendering = false;
+      drawWordCloud();
+  }
 };
 updateCanvasSize();
 window.addEventListener('resize', updateCanvasSize);
 
 let currentWords = [];
 let isCloudRendering = false;
+let totalParticipants = 0;
 
-// 3. Cargar la imagen de la máscara (huellas)
+// 4. Cargar la imagen de la máscara (huellas)
 const maskImg = new Image();
 maskImg.src = "./mask.png";
 
 maskImg.onload = () => {
-  // 4. Escuchar cambios en Firebase
+  // 5. Escuchar cambios en Firebase
   const wordsRef = ref(db, "words");
   onValue(wordsRef, (snapshot) => {
     const data = snapshot.val();
     if (data) {
       // Procesar las palabras y agrupar por frecuencia
       const wordCounts = {};
+      let rawCount = 0;
       Object.values(data).forEach(entry => {
+        rawCount++;
         const text = entry.text.trim().toUpperCase();
         if (text) {
           wordCounts[text] = (wordCounts[text] || 0) + 1;
         }
       });
+      
+      // Actualizar contador
+      totalParticipants = rawCount;
+      if (participantCountEl) {
+        participantCountEl.textContent = `${totalParticipants} aporte${totalParticipants !== 1 ? 's' : ''}`;
+      }
+
+      const uniqueWords = Object.keys(wordCounts).length;
+      
+      // Ajustar multiplicador: si hay pocas palabras, hacerlas mucho más grandes para llenar
+      const multiplier = uniqueWords < 15 ? 40 : (uniqueWords < 30 ? 25 : 15);
 
       // Convertir a formato que requiere wordcloud2.js: [[palabra, peso], ...]
       const newList = Object.entries(wordCounts).map(([word, count]) => {
-        return [word, count * 15]; // Multiplicador para tamaño visual
+        return [word, count * multiplier]; 
       });
 
       // Solo re-dibujar si hay cambios
@@ -62,6 +100,9 @@ maskImg.onload = () => {
       }
     } else {
       console.log("No hay datos en Firebase aún.");
+      totalParticipants = 0;
+      if (participantCountEl) participantCountEl.textContent = "0 aportes";
+      
       // Dibujar solo la máscara vacía si no hay palabras
       currentWords = [];
       drawWordCloud();
@@ -97,6 +138,14 @@ function drawWordCloud() {
   const startX = (canvas.width - drawWidth) / 2;
   const startY = (canvas.height - drawHeight) / 2;
 
+  // Posicionar la imagen de fondo tenue para que coincida exactamente con la máscara del canvas
+  if (faintBg) {
+    faintBg.style.width = drawWidth + "px";
+    faintBg.style.height = drawHeight + "px";
+    faintBg.style.left = startX + "px";
+    faintBg.style.top = startY + "px";
+  }
+
   // Llenar el fondo temporalmente de blanco para los bordes
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -116,7 +165,7 @@ function drawWordCloud() {
     if (r < 100 && g < 100 && b < 100) {
       data[i + 3] = 0; // Transparente
     } else {
-      data[i] = 15;
+      data[i] = 15; // Mismo color de fondo sin gradiente (borde exterior)
       data[i + 1] = 23;
       data[i + 2] = 42;
       data[i + 3] = 255;
@@ -143,7 +192,9 @@ function drawWordCloud() {
     rotationSteps: 2,
     gridSize: 8,
     weightFactor: function (size) {
-      return Math.min(size, 80);
+      // Ajustar dinámicamente el tamaño máximo para llenar mejor el espacio
+      const maxSize = totalParticipants < 10 ? 120 : 80;
+      return Math.min(size, maxSize);
     }
   });
 
