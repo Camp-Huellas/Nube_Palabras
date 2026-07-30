@@ -88,44 +88,20 @@ maskImg.onload = () => {
       
       let newList = [];
 
-      // 1. Palabras principales (las reales)
-      // Ajustamos el tamaño para que sean legibles y grandes
-      let mainMultiplier = 60;
-      if (uniqueWords > 50) {
-        mainMultiplier = Math.max(15, 60 * (50 / uniqueWords));
+      // Palabras principales (las reales y únicas)
+      // Escalamiento dinámico: si hay pocas palabras, serán más grandes
+      let mainMultiplier = 100;
+      if (uniqueWords > 20) {
+        mainMultiplier = Math.max(15, 100 * (20 / uniqueWords));
       }
 
       entries.forEach(([word, count], index) => {
-        // Variación para que no se vean todas iguales si tienen el mismo count
+        // Leve variación para dinamismo visual
         const variance = 1.2 - (index / Math.max(entries.length - 1, 1)); 
         newList.push([word, count * mainMultiplier * variance]);
       });
 
-      // 2. Palabras "Arena" (Relleno)
-      // Para que se llenen los dedos de los pies y los bordes sin congelar el navegador,
-      // usaremos el concepto de "arena": agregamos muchísimas copias pequeñas de las palabras.
-      // Al ser pequeñas (tamaño 8 a 12), el algoritmo las coloca casi instantáneamente
-      // en los huecos sobrantes (como los dedos) sin requerir cálculos pesados.
-      
-      const TARGET_TOTAL_WORDS = 350; 
-      let fillerNeeded = TARGET_TOTAL_WORDS - uniqueWords;
-      
-      if (fillerNeeded > 0) {
-        let i = 0;
-        while (fillerNeeded > 0) {
-          const [word] = entries[i % entries.length];
-          // Asignar un tamaño muy pequeño (ej: 8 a 14) para que actúen como relleno
-          const tinySize = 8 + (Math.random() * 6);
-          newList.push([word, tinySize]);
-          
-          i++;
-          fillerNeeded--;
-        }
-      }
-
-      // IMPORTANTE: Ordenar de mayor a menor. 
-      // Las grandes formarán el centro del pie.
-      // La "arena" (las pequeñas de tamaño 8-14) se escurrirán hacia los dedos.
+      // Ordenar de mayor a menor para que las grandes vayan al centro
       newList.sort((a, b) => b[1] - a[1]);
 
       // Solo re-dibujar si hay cambios
@@ -227,11 +203,12 @@ function drawWordCloud() {
     rotateRatio: 0.35,
     rotationSteps: 2,
     gridSize: 8, 
-    shrinkToFit: false, // ¡DESACTIVADO! Esto era lo que congelaba el navegador.
+    shrinkToFit: true, // Reactivamos shrinkToFit, ahora es seguro sin las 400 palabras
     weightFactor: function (size) {
-      // Como ya calculamos los tamaños exactos en la lista (reales vs arena),
-      // simplemente devolvemos el tamaño directamente.
-      return size;
+      // Límites de tamaño seguros para evitar cuelgues
+      const minSize = 10; 
+      const maxSize = 200;
+      return Math.max(minSize, Math.min(size, maxSize));
     }
   });
 
