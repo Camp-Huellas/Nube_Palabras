@@ -85,8 +85,18 @@ maskImg.onload = () => {
 
       const uniqueWords = Object.keys(wordCounts).length;
       
-      // Ajustar multiplicador: si hay pocas palabras, hacerlas mucho más grandes para llenar
-      const multiplier = uniqueWords < 15 ? 40 : (uniqueWords < 30 ? 25 : 15);
+      // Objetivo: 80 respuestas para completar las huellas de forma ideal.
+      const targetWords = 80;
+      const baseMultiplier = 12; // Multiplicador ideal cuando hay 80 palabras
+      
+      // Escalado dinámico:
+      // Si hay 1 palabra -> (80 * 12) / 1 = 960 (Se limitará al máximo)
+      // Si hay 80 palabras -> (80 * 12) / 80 = 12
+      // Si hay 160 palabras -> (80 * 12) / 160 = 6 (Se achican)
+      let multiplier = (targetWords * baseMultiplier) / Math.max(uniqueWords, 1);
+      
+      // Limitamos el multiplicador para evitar palabras gigantes o microscópicas
+      multiplier = Math.max(3, Math.min(multiplier, 90));
 
       // Convertir a formato que requiere wordcloud2.js: [[palabra, peso], ...]
       const newList = Object.entries(wordCounts).map(([word, count]) => {
@@ -179,6 +189,7 @@ function drawWordCloud() {
   }
 
   // c. Dibujar la Nube de Palabras
+  const targetWords = 80;
   WordCloud(canvas, {
     list: currentWords,
     clearCanvas: false,
@@ -191,10 +202,13 @@ function drawWordCloud() {
     rotateRatio: 0.3,
     rotationSteps: 2,
     gridSize: 8,
+    shrinkToFit: true, // Si una palabra no cabe, la reduce automáticamente
     weightFactor: function (size) {
-      // Ajustar dinámicamente el tamaño máximo para llenar mejor el espacio
-      const maxSize = totalParticipants < 10 ? 120 : 80;
-      return Math.min(size, maxSize);
+      // Definimos límites para evitar palabras ilegibles o que se desborden masivamente
+      const minSize = 14; 
+      const maxSize = totalParticipants > targetWords ? 60 : 120;
+      
+      return Math.max(minSize, Math.min(size, maxSize));
     }
   });
 
