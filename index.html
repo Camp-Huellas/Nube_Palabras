@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nube de Palabras en Vivo</title>
+  <link rel="stylesheet" href="./src/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div class="app-container">
+    <div class="qr-container">
+      <img id="qr-image" alt="Código QR" />
+      <p>¡Escanea y participa!</p>
+    </div>
+
+    <div class="wordcloud-wrapper">
+      <canvas id="wordcloud-canvas"></canvas>
+    </div>
+  </div>
+
+  <!-- We need a hidden canvas to draw the image for wordcloud2.js mask -->
+  <canvas id="mask-canvas" style="display:none;"></canvas>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.2.2/wordcloud2.min.js"></script>
+  <script type="module" src="./src/main.js"></script>
+</body>
+
+</html>
