@@ -13,7 +13,7 @@ const formUrl = currentUrl + "form.html";
 const qrImg = document.getElementById("qr-image");
 
 if (qrImg) {
-  qrImg.src = `https://quickchart.io/qr?text=${encodeURIComponent(formUrl)}&size=150&margin=1`;
+  qrImg.src = `https://quickchart.io/qr?text=${encodeURIComponent(formUrl)}&size=250&margin=1`;
 }
 
 // 2. Elementos de la interfaz extra
